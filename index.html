@@ -399,16 +399,37 @@
         const p = document.createElement("p");
         p.textContent = step.subtitle;
 
+        const spark = document.createElement("div");
+        spark.style.fontSize = "18px";
+        spark.style.opacity = "0.9";
+        spark.textContent = "You make my world softer, warmer, and brighter 💞";
+
         const again = document.createElement("button");
         again.className = "ghost";
         again.type = "button";
-        again.textContent = "Replay";
+        again.textContent = "Replay 💗";
         again.addEventListener("click", restart);
 
         stage.appendChild(big);
         stage.appendChild(p);
+        stage.appendChild(spark);
         stage.appendChild(again);
+
+        // Romantic heart burst
+        for (let i = 0; i < 60; i++) {
+          const h = document.createElement("div");
+          h.className = "heart";
+          h.style.left = 50 + (Math.random() * 40 - 20) + "vw";
+          h.style.bottom = "10vh";
+          const dur = 3 + Math.random() * 3;
+          h.style.animationDuration = dur + "s";
+          h.style.opacity = "0.9";
+          h.style.transform = `scale(${0.8 + Math.random()}) rotate(45deg)`;
+          document.getElementById("hearts").appendChild(h);
+          setTimeout(() => h.remove(), dur * 1000);
+        }
         return;
+      }
       }
 
       const [row, hint] = createButtons(step);

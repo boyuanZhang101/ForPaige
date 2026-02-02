@@ -245,7 +245,7 @@
       {
         id: "q3",
         title: "This one is serious 😌",
-        subtitle: "Can I steal a kiss today?",
+        subtitle: "Did you miss me?"
         yesText: "Yes",
         noText: "Not today",
         allowNo: false,
@@ -288,9 +288,14 @@
 
     function showToast(msg){
       toast.textContent = msg;
+      toast.style.fontSize = "28px";
+      toast.style.fontWeight = "800";
+      toast.style.padding = "24px 28px";
+      toast.style.maxWidth = "90%";
+      toast.style.textAlign = "center";
       toast.classList.add("show");
       clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toast.classList.remove("show"), 900);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 1200);
     }
 
     function setProgress(){
@@ -334,10 +339,10 @@
         const escape = () => {
           noClicks += 1;
           const msgs = [
-            "You clicked wrong 😌",
-            "Nope. Try again 😇",
-            "Nice try 😏",
-            "The universe says YES 💗",
+            "TRY AGAIN 😤",
+            "WRONG ANSWER ❌",
+            "Don’t be stupidddd 🙄",
+            "Don’t be silly 😌",
           ];
           showToast(msgs[Math.min(msgs.length - 1, noClicks - 1)]);
 

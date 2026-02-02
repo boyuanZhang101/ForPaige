@@ -101,7 +101,7 @@
 
     .stage{
       margin-top: 18px;
-      min-height: 150px;
+      min-height: 160px;
       display:grid;
       gap:14px;
     }
@@ -120,7 +120,7 @@
       border-radius: 14px;
       padding: 12px 16px;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       cursor:pointer;
       transform: translateZ(0);
       transition: transform .12s ease, filter .12s ease, opacity .12s ease;
@@ -139,24 +139,6 @@
       margin-top: 8px;
     }
 
-    .toast{
-      position:absolute;
-      right:18px;
-      top:18px;
-      max-width: 280px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.92);
-      border: 1px solid rgba(0,0,0,.07);
-      box-shadow: 0 14px 40px rgba(0,0,0,.12);
-      font-size: 13px;
-      opacity:0;
-      transform: translateY(-8px);
-      transition: opacity .2s ease, transform .2s ease;
-      pointer-events:none;
-    }
-    .toast.show{opacity:1; transform: translateY(0)}
-
     .big{
       font-size: clamp(28px, 3.6vw, 44px);
       line-height: 1.05;
@@ -174,25 +156,64 @@
     }
     .linklike{background:transparent; box-shadow:none; padding:8px 10px; border-radius:12px; border:1px dashed rgba(0,0,0,.18)}
 
-    /* Make the "No" button move for comedic effect */
-    .no.escape{
-      position: relative;
+    /* BIG "No" popup */
+    .overlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      place-items:center;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(3px);
+      z-index: 50;
+      padding: 18px;
     }
+    .overlay.show{display:grid;}
+    .overlay-card{
+      width:min(720px, 92vw);
+      background: rgba(255,255,255,.96);
+      border-radius: 22px;
+      padding: 22px 18px;
+      box-shadow: 0 25px 80px rgba(0,0,0,.25);
+      border: 1px solid rgba(0,0,0,.07);
+      text-align:center;
+      transform: translateY(8px);
+      animation: pop .14s ease-out forwards;
+    }
+    @keyframes pop{from{transform: translateY(12px) scale(.98)} to{transform: translateY(0) scale(1)}}
+    .overlay-title{
+      font-size: clamp(28px, 4.2vw, 48px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin: 4px 0 10px;
+    }
+    .overlay-sub{
+      margin:0 0 14px;
+      font-size: 15px;
+      opacity:.85;
+    }
+    .overlay-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
 
     @media (max-width:480px){
       .card{padding:20px}
       button{flex:1}
-      .toast{left:18px; right:18px}
     }
   </style>
 </head>
 <body>
-  <div class="hearts" id="hearts"></div>
+  <div class="hearts" id="hearts" aria-hidden="true"></div>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Try again">
+    <div class="overlay-card">
+      <div class="overlay-title" id="overlayTitle">TRY AGAIN 😤</div>
+      <p class="overlay-sub">(Hint: there’s only one right answer)</p>
+      <div class="overlay-actions">
+        <button class="yes" id="overlayOk" type="button">OK 💗</button>
+      </div>
+    </div>
+  </div>
 
   <div class="wrap">
     <div class="card">
-      <div class="toast" id="toast">You clicked wrong 😌</div>
-
       <div class="topline">
         <div class="badge" id="stepBadge">Step 1</div>
         <button class="linklike" id="restartBtn" type="button">Restart</button>
@@ -213,9 +234,17 @@
   </div>
 
   <script>
-    // ====== Customize these ======
+    // ====== Customize ======
     const boyfriendName = "Boyuan"; // appears in the final message
-    const girlfriendName = ""; // optional, e.g. "Babe"; leave blank if you want
+    const girlfriendName = ""; // optional, e.g. "Paige"
+
+    // Messages for when she tries to click No (BIG popup)
+    const NO_MESSAGES = [
+      "TRY AGAIN 😤",
+      "WRONG ANSWER ❌",
+      "Don’t be stupidddd 🙄",
+      "Don’t be silly 😌",
+    ];
 
     const flow = [
       {
@@ -245,9 +274,9 @@
       {
         id: "q3",
         title: "This one is serious 😌",
-        subtitle: "Did you miss me?"
+        subtitle: "Did you miss me?",
         yesText: "Yes",
-        noText: "Not today",
+        noText: "Not really",
         allowNo: false,
       },
       {
@@ -274,32 +303,23 @@
       },
     ];
 
-    // ====== App logic ======
+    // ====== DOM ======
     const stage = document.getElementById("stage");
     const titleEl = document.getElementById("title");
     const subtitleEl = document.getElementById("subtitle");
     const stepBadge = document.getElementById("stepBadge");
     const bar = document.getElementById("bar");
-    const toast = document.getElementById("toast");
     const restartBtn = document.getElementById("restartBtn");
+
+    const overlay = document.getElementById("overlay");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayOk = document.getElementById("overlayOk");
 
     let idx = 0;
     let noClicks = 0;
 
-    function showToast(msg){
-      toast.textContent = msg;
-      toast.style.fontSize = "28px";
-      toast.style.fontWeight = "800";
-      toast.style.padding = "24px 28px";
-      toast.style.maxWidth = "90%";
-      toast.style.textAlign = "center";
-      toast.classList.add("show");
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => toast.classList.remove("show"), 1200);
-    }
-
     function setProgress(){
-      const total = flow.length - 1; // exclude final done screen from progress max feel
+      const total = flow.length - 1;
       const pct = Math.min(100, Math.round((idx / total) * 100));
       bar.style.width = pct + "%";
       stepBadge.textContent = flow[idx].done ? "Done" : `Step ${Math.max(1, idx + 1)}`;
@@ -317,6 +337,21 @@
       render();
     }
 
+    function showBigNoPopup(){
+      const msg = NO_MESSAGES[noClicks % NO_MESSAGES.length];
+      overlayTitle.textContent = msg;
+      overlay.classList.add("show");
+    }
+
+    function hideBigNoPopup(){
+      overlay.classList.remove("show");
+    }
+
+    overlayOk.addEventListener("click", hideBigNoPopup);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) hideBigNoPopup();
+    });
+
     function createButtons(step){
       const row = document.createElement("div");
       row.className = "btnrow";
@@ -326,66 +361,59 @@
       yes.type = "button";
       yes.textContent = step.yesText || "Yes";
       yes.addEventListener("click", next);
-
       row.appendChild(yes);
 
-      if (!step.allowNo) {
-        // still show a "No" button at first for fun, but it will refuse and then disappear
-        const no = document.createElement("button");
-        no.className = "no escape";
-        no.type = "button";
-        no.textContent = step.noText || "No";
+      const no = document.createElement("button");
+      no.className = "no";
+      no.type = "button";
+      no.textContent = step.noText || "No";
 
-        const escape = () => {
-          noClicks += 1;
-          const msgs = [
-            "TRY AGAIN 😤",
-            "WRONG ANSWER ❌",
-            "Don’t be stupidddd 🙄",
-            "Don’t be silly 😌",
-          ];
-          showToast(msgs[Math.min(msgs.length - 1, noClicks - 1)]);
-
-          // move button to a random spot inside the row
-          const dx = (Math.random() * 180) - 90;
-          const dy = (Math.random() * 60) - 30;
-          no.style.transform = `translate(${dx}px, ${dy}px)`;
-
-          // after a couple attempts, remove the "No" button completely ("yes only")
-          if (noClicks >= 2) {
-            no.disabled = true;
-            no.style.opacity = 0;
-            setTimeout(() => {
-              if (no.parentNode) no.parentNode.removeChild(no);
-            }, 200);
-          }
-        };
-
-        no.addEventListener("mouseenter", escape);
-        no.addEventListener("click", escape);
-        no.addEventListener("touchstart", (e) => { e.preventDefault(); escape(); }, {passive:false});
-
-        row.appendChild(no);
-      } else {
-        const no = document.createElement("button");
-        no.className = "no";
-        no.type = "button";
-        no.textContent = step.noText || "No";
+      if (step.allowNo) {
+        // First question: allow "No" click once, but then force yes-only afterwards
         no.addEventListener("click", () => {
-          // first question allows a real "No" click, but still gently forces yes
-          showToast("C’monnn 😭 (you clicked wrong)");
-          // Immediately convert to yes-only
-          step.allowNo = false;
+          noClicks += 1;
+          showBigNoPopup();
+          step.allowNo = false; // flip to yes-only
+          // change hint by re-rendering buttons
           render();
         });
-        row.appendChild(no);
+      } else {
+        // All later steps: "No" always wrong. After 2 attempts it disappears.
+        no.addEventListener("click", () => {
+          noClicks += 1;
+          showBigNoPopup();
+          if (noClicks >= 2) {
+            no.disabled = true;
+            no.style.opacity = "0";
+            setTimeout(() => no.remove(), 180);
+          }
+        });
       }
+
+      row.appendChild(no);
 
       const hint = document.createElement("div");
       hint.className = "hint";
       hint.textContent = step.allowNo ? "Be honest 😉" : "(Hint: there’s only one right answer)";
 
       return [row, hint];
+    }
+
+    function heartBurst(count = 70){
+      const root = document.getElementById("hearts");
+      for (let i=0; i<count; i++){
+        const h = document.createElement("div");
+        h.className = "heart";
+        h.style.left = 50 + (Math.random() * 60 - 30) + "vw";
+        h.style.bottom = "8vh";
+        const dur = 3 + Math.random()*3;
+        h.style.animationDuration = dur + "s";
+        h.style.opacity = "0.95";
+        const s = 0.7 + Math.random()*1.8;
+        h.style.transform = `scale(${s}) rotate(45deg)`;
+        root.appendChild(h);
+        setTimeout(() => h.remove(), dur * 1000);
+      }
     }
 
     function render(){
@@ -404,9 +432,9 @@
         const p = document.createElement("p");
         p.textContent = step.subtitle;
 
-        const spark = document.createElement("div");
+        const spark = document.createElement("p");
         spark.style.fontSize = "18px";
-        spark.style.opacity = "0.9";
+        spark.style.opacity = "0.92";
         spark.textContent = "You make my world softer, warmer, and brighter 💞";
 
         const again = document.createElement("button");
@@ -420,21 +448,8 @@
         stage.appendChild(spark);
         stage.appendChild(again);
 
-        // Romantic heart burst
-        for (let i = 0; i < 60; i++) {
-          const h = document.createElement("div");
-          h.className = "heart";
-          h.style.left = 50 + (Math.random() * 40 - 20) + "vw";
-          h.style.bottom = "10vh";
-          const dur = 3 + Math.random() * 3;
-          h.style.animationDuration = dur + "s";
-          h.style.opacity = "0.9";
-          h.style.transform = `scale(${0.8 + Math.random()}) rotate(45deg)`;
-          document.getElementById("hearts").appendChild(h);
-          setTimeout(() => h.remove(), dur * 1000);
-        }
+        heartBurst(90);
         return;
-      }
       }
 
       const [row, hint] = createButtons(step);
@@ -442,20 +457,20 @@
       stage.appendChild(hint);
     }
 
-    // ====== hearts background ======
+    // background hearts
     function spawnHearts(){
       const root = document.getElementById("hearts");
-      const count = 26;
       root.innerHTML = "";
+      const count = 24;
       for (let i=0; i<count; i++){
         const h = document.createElement("div");
         h.className = "heart";
         h.style.left = Math.random()*100 + "vw";
         h.style.bottom = (-10 - Math.random()*60) + "vh";
-        const dur = 6 + Math.random()*8;
+        const dur = 7 + Math.random()*9;
         h.style.animationDuration = dur + "s";
         h.style.animationDelay = (-Math.random()*dur) + "s";
-        const s = 0.7 + Math.random()*1.4;
+        const s = 0.6 + Math.random()*1.3;
         h.style.transform = `scale(${s}) rotate(45deg)`;
         root.appendChild(h);
       }

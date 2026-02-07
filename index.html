@@ -1,3 +1,4 @@
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,7 +9,7 @@
     :root{
       --bg1:#ffd1dc;
       --bg2:#ffe6ef;
-      --card:rgba(255,255,255,.86);
+      --card:rgba(255,255,255,.88);
       --text:#1f1f1f;
       --shadow: 0 20px 60px rgba(0,0,0,.14);
       --radius: 22px;
@@ -93,6 +94,7 @@
       flex-wrap:wrap;
       gap:12px;
       margin-top: 10px;
+      position:relative;
     }
     button{
       border:0;
@@ -102,9 +104,10 @@
       font-weight: 800;
       cursor:pointer;
       box-shadow: 0 10px 22px rgba(0,0,0,.12);
-      transition: transform .12s ease, opacity .12s ease, filter .12s ease;
+      transition: transform .12s ease, opacity .12s ease, filter .12s ease, left .15s ease, top .15s ease;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
+      position:relative;
     }
     button:active{transform: scale(.98)}
     .yes{background: linear-gradient(180deg, var(--yes1), var(--yes2)); color:white;}
@@ -127,8 +130,50 @@
       transition: opacity .15s ease, transform .15s ease;
       font-weight: 800;
       z-index: 50;
+      text-align:center;
+      max-width: 90vw;
     }
     .toast.show{opacity: 1; transform: translateX(-50%) translateY(-6px);}
+
+    /* BIG popup overlay */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.40);
+      display:none;
+      place-items:center;
+      z-index: 999;
+      padding: 18px;
+    }
+    .overlay.show{display:grid;}
+    .overlayCard{
+      width:min(680px, 92vw);
+      background: rgba(255,255,255,.97);
+      border-radius: 24px;
+      padding: 26px 18px;
+      box-shadow: 0 30px 90px rgba(0,0,0,.28);
+      border: 1px solid rgba(0,0,0,.08);
+      text-align:center;
+      animation: pop .14s ease-out forwards;
+    }
+    @keyframes pop{from{transform: translateY(14px) scale(.98)} to{transform: translateY(0) scale(1)}}
+    .overlayTitle{
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin: 2px 0 10px;
+    }
+    .overlaySub{margin:0 0 14px; opacity:.85}
+    .overlayBtn{
+      background:#ff5c8a;
+      color:white;
+      font-weight:900;
+      border:none;
+      padding: 12px 18px;
+      border-radius: 14px;
+      cursor:pointer;
+      box-shadow: 0 12px 24px rgba(0,0,0,.16);
+    }
 
     .big{
       font-size: clamp(28px, 3.8vw, 48px);
@@ -153,6 +198,7 @@
   </style>
 </head>
 <body>
+
   <div class="card">
     <div class="top">
       <div class="badge" id="badge">Step 1</div>
@@ -172,19 +218,28 @@
     </div>
   </div>
 
-  <div class="toast" id="toast">You clicked wrong 😤</div>
+  <div class="toast" id="toast">Wrong answer 😤</div>
+
+  <div class="overlay" id="overlay">
+    <div class="overlayCard">
+      <div class="overlayTitle" id="overlayTitle">WRONG ANSWER STUPIOOOOOD 😤💗</div>
+      <p class="overlaySub">(Be serious 😌 try again)</p>
+      <button class="overlayBtn" id="overlayOk" type="button">OK 💗</button>
+    </div>
+  </div>
 
   <script>
-    // Simple question flow (original)
+    // ===== Questions (edit subtitles if you want) =====
     const steps = [
       { title: "Hey 💗", subtitle: "Do you love me?", yesText: "Yes 😘", noText: "No 🙃", allowNo: true },
       { title: "Quick one 🤭", subtitle: "Would you still like me if I was a worm?", yesText: "Yes", noText: "No", allowNo: true },
       { title: "Serious check ✅", subtitle: "Did you miss me?", yesText: "Yes", noText: "No", allowNo: true },
       { title: "Random 😂", subtitle: "Can we get boba soon?", yesText: "Yes", noText: "No", allowNo: true },
-      { title: "Final question 💘", subtitle: "Will you be my Valentine?", yesText: "YES!", noText: "No", allowNo: false, forceYes: true },
+      { title: "Final question 💘", subtitle: "Will you be my Valentine?", yesText: "YES!", noText: "No", allowNo: true, forceYes: true },
       { done: true, title: "I LOVE YOUUUU 💘", subtitle: "Happy Valentine’s Day 💞" }
     ];
 
+    // ===== DOM =====
     const titleEl = document.getElementById("title");
     const subtitleEl = document.getElementById("subtitle");
     const stage = document.getElementById("stage");
@@ -192,6 +247,9 @@
     const bar = document.getElementById("bar");
     const toast = document.getElementById("toast");
     const restartBtn = document.getElementById("restart");
+
+    const overlay = document.getElementById("overlay");
+    const overlayOk = document.getElementById("overlayOk");
 
     let i = 0;
 
@@ -201,6 +259,15 @@
       clearTimeout(showToast._t);
       showToast._t = setTimeout(() => toast.classList.remove("show"), 900);
     }
+
+    function showBigPopup(){
+      overlay.classList.add("show");
+    }
+    function hideBigPopup(){
+      overlay.classList.remove("show");
+    }
+    overlayOk.addEventListener("click", hideBigPopup);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) hideBigPopup(); });
 
     function setProgress(){
       const total = steps.length - 1;
@@ -261,26 +328,38 @@
       no.type = "button";
       no.textContent = s.noText || "No";
 
-      if (s.allowNo){
-        no.addEventListener("click", () => {
-          showToast("You clicked wrong 😤");
-          // After a no click on the first screens, we still allow her to proceed if she wants by clicking yes
-        });
-      } else {
-        // Force yes-only (valentine question)
-        no.addEventListener("click", () => {
-          showToast("You clicked wrong 😤");
-          no.style.opacity = "0.25";
-          no.disabled = true;
-        });
-      }
-
       row.appendChild(yes);
       row.appendChild(no);
 
+      // --- Cute No button dodge ---
+      // When she tries to click No: it moves around a few times, then disappears and shows big popup.
+      let dodgeCount = 0;
+
+      // Make it dodge BEFORE click (mouseenter works on desktop; click fallback works on phone)
+      function dodge(){
+        dodgeCount++;
+
+        // Random move within the card area (bounded so it doesn't fly off screen)
+        const x = Math.random() * 260 - 130; // -130..130
+        const y = Math.random() * 140 - 70;  // -70..70
+        no.style.transform = `translate(${x}px, ${y}px)`;
+
+        showToast("Nope 😌");
+
+        if (dodgeCount >= 3 || s.forceYes){
+          no.style.opacity = "0";
+          no.disabled = true;
+          setTimeout(() => no.remove(), 220);
+          showBigPopup();
+        }
+      }
+
+      no.addEventListener("mouseenter", dodge);
+      no.addEventListener("click", (e) => { e.preventDefault(); dodge(); });
+
       const hint = document.createElement("div");
       hint.className = "hint";
-      hint.textContent = s.allowNo ? "(You can try… but I know the answer 😌)" : "(Only one option is correct 😌)";
+      hint.textContent = "(Try clicking NO if you dare 😈)";
 
       stage.appendChild(row);
       stage.appendChild(hint);
@@ -291,3 +370,5 @@
   </script>
 </body>
 </html>
+```
+

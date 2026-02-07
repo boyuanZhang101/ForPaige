@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>💌 Quick Question</title>
+  <title>💘 Quick Questions</title>
   <style>
     :root{
-      --bg1:#ffdde1;
-      --bg2:#ee9ca7;
-      --card:#ffffffcc;
+      --bg1:#ffd1dc;
+      --bg2:#ffe6ef;
+      --card:rgba(255,255,255,.86);
       --text:#1f1f1f;
-      --yes:#22c55e;
-      --no:#ef4444;
-      --shadow: 0 20px 60px rgba(0,0,0,.15);
+      --shadow: 0 20px 60px rgba(0,0,0,.14);
       --radius: 22px;
+      --yes1:#34d399;
+      --yes2:#16a34a;
+      --no1:#fb7185;
+      --no2:#e11d48;
     }
     *{box-sizing:border-box}
     body{
@@ -23,58 +25,36 @@
       place-items:center;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--text);
-      background: radial-gradient(1200px 800px at 20% 20%, var(--bg1), transparent 60%),
-                  radial-gradient(1200px 800px at 80% 70%, var(--bg2), transparent 55%),
-                  linear-gradient(135deg, #fff, #ffe7ef);
+      background:
+        radial-gradient(1200px 800px at 20% 20%, var(--bg1), transparent 60%),
+        radial-gradient(1200px 800px at 80% 70%, var(--bg2), transparent 55%),
+        linear-gradient(135deg, #fff, #ffe7ef);
       overflow:hidden;
+      padding: 20px;
     }
 
-    /* floating hearts */
-    .hearts{position:fixed; inset:0; pointer-events:none; opacity:.35;}
-    .heart{
-      position:absolute;
-      width:14px; height:14px;
-      background:#ff3b8a;
-      transform: rotate(45deg);
-      animation: floatUp linear infinite;
-      border-radius:4px;
-    }
-    .heart:before, .heart:after{
-      content:"";
-      position:absolute;
-      width:14px; height:14px;
-      background:#ff3b8a;
-      border-radius:50%;
-    }
-    .heart:before{left:-7px; top:0;}
-    .heart:after{left:0; top:-7px;}
-    @keyframes floatUp{
-      from{transform: translateY(20vh) rotate(45deg); filter: blur(0px);}
-      to{transform: translateY(-120vh) rotate(45deg); filter: blur(.2px);}
-    }
-
-    .wrap{width:min(720px, 92vw); padding:24px;}
     .card{
+      width:min(760px, 92vw);
       background:var(--card);
-      backdrop-filter: blur(10px);
       border:1px solid rgba(255,255,255,.7);
-      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
       border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding: 26px;
       position:relative;
     }
-    .topline{
+    .top{
       display:flex;
+      justify-content:space-between;
       gap:10px;
       align-items:center;
-      justify-content:space-between;
-      margin-bottom:12px;
+      margin-bottom: 12px;
     }
     .badge{
       font-size:12px;
       padding:6px 10px;
       border-radius:999px;
-      background:rgba(255,255,255,.85);
+      background: rgba(255,255,255,.9);
       border:1px solid rgba(0,0,0,.06);
     }
     .progress{
@@ -84,13 +64,17 @@
       overflow:hidden;
       margin: 12px 0 18px;
     }
-    .bar{height:100%; width:0%; background: linear-gradient(90deg, #ff3b8a, #ff7aa8); transition: width .35s ease;}
-
+    .bar{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, #ff3b8a, #ff7aa8);
+      transition: width .35s ease;
+    }
     h1{
-      margin:10px 0 0;
-      font-size: clamp(26px, 3.2vw, 40px);
-      line-height: 1.05;
-      letter-spacing: -0.02em;
+      margin: 6px 0 0;
+      font-size: clamp(26px, 3.2vw, 42px);
+      letter-spacing:-0.02em;
+      line-height:1.05;
     }
     p{
       margin: 12px 0 0;
@@ -98,23 +82,18 @@
       opacity:.9;
       line-height:1.45;
     }
-
     .stage{
       margin-top: 18px;
       min-height: 160px;
       display:grid;
-      gap:14px;
+      gap: 14px;
     }
-
     .btnrow{
       display:flex;
       flex-wrap:wrap;
       gap:12px;
-      align-items:center;
       margin-top: 10px;
-      position:relative;
     }
-
     button{
       border:0;
       border-radius: 14px;
@@ -122,320 +101,139 @@
       font-size: 16px;
       font-weight: 800;
       cursor:pointer;
-      transform: translateZ(0);
-      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
       box-shadow: 0 10px 22px rgba(0,0,0,.12);
+      transition: transform .12s ease, opacity .12s ease, filter .12s ease;
       user-select:none;
       -webkit-tap-highlight-color: transparent;
     }
     button:active{transform: scale(.98)}
-    .yes{background: linear-gradient(180deg, #34d399, #16a34a); color:white;}
-    .no{background: linear-gradient(180deg, #fb7185, #e11d48); color:white;}
-    .ghost{background: rgba(255,255,255,.9); border:1px solid rgba(0,0,0,.08); box-shadow:none;}
+    .yes{background: linear-gradient(180deg, var(--yes1), var(--yes2)); color:white;}
+    .no{background: linear-gradient(180deg, var(--no1), var(--no2)); color:white;}
+    .ghost{background: rgba(255,255,255,.92); border:1px solid rgba(0,0,0,.08); box-shadow:none;}
+    .hint{font-size: 13px; opacity:.8}
 
-    .hint{
-      font-size: 13px;
-      opacity: .8;
-      margin-top: 8px;
+    /* toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%);
+      background: rgba(20,20,20,.92);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 14px;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .15s ease, transform .15s ease;
+      font-weight: 800;
+      z-index: 50;
     }
+    .toast.show{opacity: 1; transform: translateX(-50%) translateY(-6px);}
 
     .big{
-      font-size: clamp(28px, 3.6vw, 44px);
-      line-height: 1.05;
+      font-size: clamp(28px, 3.8vw, 48px);
+      font-weight: 900;
+      letter-spacing:-0.02em;
+      line-height:1.05;
     }
 
     .footer{
-      margin-top:14px;
+      margin-top: 16px;
+      font-size: 12px;
+      opacity: .75;
       display:flex;
-      gap:10px;
-      align-items:center;
       justify-content:space-between;
+      gap:10px;
       flex-wrap:wrap;
-      opacity:.85;
-      font-size:12px;
     }
-    .linklike{background:transparent; box-shadow:none; padding:8px 10px; border-radius:12px; border:1px dashed rgba(0,0,0,.18)}
-
-    /* BIG "No" popup */
-    .overlay{
-      position:fixed;
-      inset:0;
-      display:none;
-      place-items:center;
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(3px);
-      z-index: 50;
-      padding: 18px;
-    }
-    .overlay.show{display:grid;}
-    .overlay-card{
-      width:min(720px, 92vw);
-      background: rgba(255,255,255,.96);
-      border-radius: 22px;
-      padding: 22px 18px;
-      box-shadow: 0 25px 80px rgba(0,0,0,.25);
-      border: 1px solid rgba(0,0,0,.07);
-      text-align:center;
-      transform: translateY(8px);
-      animation: pop .14s ease-out forwards;
-    }
-    @keyframes pop{from{transform: translateY(12px) scale(.98)} to{transform: translateY(0) scale(1)}}
-    .overlay-title{
-      font-size: clamp(28px, 4.2vw, 48px);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      margin: 4px 0 10px;
-    }
-    .overlay-sub{
-      margin:0 0 14px;
-      font-size: 15px;
-      opacity:.85;
-    }
-    .overlay-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
 
     @media (max-width:480px){
-      .card{padding:20px}
       button{flex:1}
     }
   </style>
 </head>
 <body>
-  <div class="hearts" id="hearts" aria-hidden="true"></div>
+  <div class="card">
+    <div class="top">
+      <div class="badge" id="badge">Step 1</div>
+      <button class="ghost" id="restart" type="button">Restart</button>
+    </div>
 
-  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Try again">
-    <div class="overlay-card">
-      <div class="overlay-title" id="overlayTitle">TRY AGAIN 😤</div>
-      <p class="overlay-sub">(Hint: there’s only one right answer)</p>
-      <div class="overlay-actions">
-        <button class="yes" id="overlayOk" type="button">OK 💗</button>
-      </div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <h1 id="title">Hey 💗</h1>
+    <p id="subtitle">I have a few quick questions…</p>
+
+    <div class="stage" id="stage"></div>
+
+    <div class="footer">
+      <span>Made with love.</span>
+      <span>💌</span>
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="card">
-      <div class="topline">
-        <div class="badge" id="stepBadge">Step 1</div>
-        <button class="linklike" id="restartBtn" type="button">Restart</button>
-      </div>
-
-      <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
-
-      <h1 id="title">Hey 💗</h1>
-      <p id="subtitle">I have a few quick questions…</p>
-
-      <div class="stage" id="stage"></div>
-
-      <div class="footer">
-        <span id="footerLeft">Made with love.</span>
-        <span id="footerRight">💌</span>
-      </div>
-    </div>
-  </div>
+  <div class="toast" id="toast">You clicked wrong 😤</div>
 
   <script>
-    // ====== Customize ======
-    const boyfriendName = "Boyuan"; // appears in the final message
-    const girlfriendName = ""; // optional, e.g. "Paige"
-
-    // Messages for when she tries to click No (BIG popup)
-    const NO_MESSAGES = [
-      "TRY AGAIN 😤",
-      "WRONG ANSWER ❌",
-      "Don’t be stupidddd 🙄",
-      "Don’t be silly 😌",
+    // Simple question flow (original)
+    const steps = [
+      { title: "Hey 💗", subtitle: "Do you love me?", yesText: "Yes 😘", noText: "No 🙃", allowNo: true },
+      { title: "Quick one 🤭", subtitle: "Would you still like me if I was a worm?", yesText: "Yes", noText: "No", allowNo: true },
+      { title: "Serious check ✅", subtitle: "Did you miss me?", yesText: "Yes", noText: "No", allowNo: true },
+      { title: "Random 😂", subtitle: "Can we get boba soon?", yesText: "Yes", noText: "No", allowNo: true },
+      { title: "Final question 💘", subtitle: "Will you be my Valentine?", yesText: "YES!", noText: "No", allowNo: false, forceYes: true },
+      { done: true, title: "I LOVE YOUUUU 💘", subtitle: "Happy Valentine’s Day 💞" }
     ];
 
-    const flow = [
-      {
-        id: "love",
-        title: girlfriendName ? `Hey ${girlfriendName} 💗` : "Hey 💗",
-        subtitle: "Do you love me?",
-        yesText: "Yes 😘",
-        noText: "No 🙃",
-        allowNo: true,
-      },
-      {
-        id: "q1",
-        title: "Important…",
-        subtitle: "Am I your favorite person?",
-        yesText: "Obviously",
-        noText: "Umm…",
-        allowNo: false,
-      },
-      {
-        id: "q2",
-        title: "Quick check ✅",
-        subtitle: "Do you promise to be patient with me when I’m annoying?",
-        yesText: "I promise",
-        noText: "Nope",
-        allowNo: false,
-      },
-      {
-        id: "q3",
-        title: "This one is serious 😌",
-        subtitle: "Did you miss me?",
-        yesText: "Yes",
-        noText: "Not really",
-        allowNo: false,
-      },
-      {
-        id: "q4",
-        title: "Random one 🤭",
-        subtitle: "If we get boba, can I pick your drink?",
-        yesText: "Fine",
-        noText: "Never",
-        allowNo: false,
-      },
-      {
-        id: "valentine",
-        title: "Final question 💘",
-        subtitle: "Will you be my Valentine?",
-        yesText: "YES!",
-        noText: "No",
-        allowNo: false,
-      },
-      {
-        id: "done",
-        title: "I love you 💞",
-        subtitle: `Happy Valentine’s Day${girlfriendName ? ", " + girlfriendName : ""}! — ${boyfriendName}`,
-        done: true,
-      },
-    ];
-
-    // ====== DOM ======
-    const stage = document.getElementById("stage");
     const titleEl = document.getElementById("title");
     const subtitleEl = document.getElementById("subtitle");
-    const stepBadge = document.getElementById("stepBadge");
+    const stage = document.getElementById("stage");
+    const badge = document.getElementById("badge");
     const bar = document.getElementById("bar");
-    const restartBtn = document.getElementById("restartBtn");
+    const toast = document.getElementById("toast");
+    const restartBtn = document.getElementById("restart");
 
-    const overlay = document.getElementById("overlay");
-    const overlayTitle = document.getElementById("overlayTitle");
-    const overlayOk = document.getElementById("overlayOk");
+    let i = 0;
 
-    let idx = 0;
-    let noClicks = 0;
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 900);
+    }
 
     function setProgress(){
-      const total = flow.length - 1;
-      const pct = Math.min(100, Math.round((idx / total) * 100));
+      const total = steps.length - 1;
+      const pct = Math.min(100, Math.round((i / total) * 100));
       bar.style.width = pct + "%";
-      stepBadge.textContent = flow[idx].done ? "Done" : `Step ${Math.max(1, idx + 1)}`;
+      badge.textContent = steps[i].done ? "Done" : `Step ${i+1}`;
     }
 
     function next(){
-      idx = Math.min(flow.length - 1, idx + 1);
-      noClicks = 0;
+      i = Math.min(steps.length - 1, i + 1);
       render();
     }
 
     function restart(){
-      idx = 0;
-      noClicks = 0;
+      i = 0;
       render();
     }
 
-    function showBigNoPopup(){
-      const msg = NO_MESSAGES[noClicks % NO_MESSAGES.length];
-      overlayTitle.textContent = msg;
-      overlay.classList.add("show");
-    }
-
-    function hideBigNoPopup(){
-      overlay.classList.remove("show");
-    }
-
-    overlayOk.addEventListener("click", hideBigNoPopup);
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) hideBigNoPopup();
-    });
-
-    function createButtons(step){
-      const row = document.createElement("div");
-      row.className = "btnrow";
-
-      const yes = document.createElement("button");
-      yes.className = "yes";
-      yes.type = "button";
-      yes.textContent = step.yesText || "Yes";
-      yes.addEventListener("click", next);
-      row.appendChild(yes);
-
-      const no = document.createElement("button");
-      no.className = "no";
-      no.type = "button";
-      no.textContent = step.noText || "No";
-
-      if (step.allowNo) {
-        // First question: allow "No" click once, but then force yes-only afterwards
-        no.addEventListener("click", () => {
-          noClicks += 1;
-          showBigNoPopup();
-          step.allowNo = false; // flip to yes-only
-          // change hint by re-rendering buttons
-          render();
-        });
-      } else {
-        // All later steps: "No" always wrong. After 2 attempts it disappears.
-        no.addEventListener("click", () => {
-          noClicks += 1;
-          showBigNoPopup();
-          if (noClicks >= 2) {
-            no.disabled = true;
-            no.style.opacity = "0";
-            setTimeout(() => no.remove(), 180);
-          }
-        });
-      }
-
-      row.appendChild(no);
-
-      const hint = document.createElement("div");
-      hint.className = "hint";
-      hint.textContent = step.allowNo ? "Be honest 😉" : "(Hint: there’s only one right answer)";
-
-      return [row, hint];
-    }
-
-    function heartBurst(count = 70){
-      const root = document.getElementById("hearts");
-      for (let i=0; i<count; i++){
-        const h = document.createElement("div");
-        h.className = "heart";
-        h.style.left = 50 + (Math.random() * 60 - 30) + "vw";
-        h.style.bottom = "8vh";
-        const dur = 3 + Math.random()*3;
-        h.style.animationDuration = dur + "s";
-        h.style.opacity = "0.95";
-        const s = 0.7 + Math.random()*1.8;
-        h.style.transform = `scale(${s}) rotate(45deg)`;
-        root.appendChild(h);
-        setTimeout(() => h.remove(), dur * 1000);
-      }
-    }
-
     function render(){
-      const step = flow[idx];
+      const s = steps[i];
       setProgress();
-      titleEl.textContent = step.title;
-      subtitleEl.textContent = step.subtitle;
-
       stage.innerHTML = "";
 
-      if (step.done) {
+      titleEl.textContent = s.title;
+      subtitleEl.textContent = s.subtitle;
+
+      if (s.done){
         const big = document.createElement("div");
         big.className = "big";
-        big.textContent = "I LOVE YOUUUU 💘";
+        big.textContent = s.title;
 
         const p = document.createElement("p");
-        p.textContent = step.subtitle;
-
-        const spark = document.createElement("p");
-        spark.style.fontSize = "18px";
-        spark.style.opacity = "0.92";
-        spark.textContent = "You make my world softer, warmer, and brighter 💞";
+        p.textContent = s.subtitle;
 
         const again = document.createElement("button");
         again.className = "ghost";
@@ -445,42 +243,51 @@
 
         stage.appendChild(big);
         stage.appendChild(p);
-        stage.appendChild(spark);
         stage.appendChild(again);
-
-        heartBurst(90);
         return;
       }
 
-      const [row, hint] = createButtons(step);
+      const row = document.createElement("div");
+      row.className = "btnrow";
+
+      const yes = document.createElement("button");
+      yes.className = "yes";
+      yes.type = "button";
+      yes.textContent = s.yesText || "Yes";
+      yes.addEventListener("click", next);
+
+      const no = document.createElement("button");
+      no.className = "no";
+      no.type = "button";
+      no.textContent = s.noText || "No";
+
+      if (s.allowNo){
+        no.addEventListener("click", () => {
+          showToast("You clicked wrong 😤");
+          // After a no click on the first screens, we still allow her to proceed if she wants by clicking yes
+        });
+      } else {
+        // Force yes-only (valentine question)
+        no.addEventListener("click", () => {
+          showToast("You clicked wrong 😤");
+          no.style.opacity = "0.25";
+          no.disabled = true;
+        });
+      }
+
+      row.appendChild(yes);
+      row.appendChild(no);
+
+      const hint = document.createElement("div");
+      hint.className = "hint";
+      hint.textContent = s.allowNo ? "(You can try… but I know the answer 😌)" : "(Only one option is correct 😌)";
+
       stage.appendChild(row);
       stage.appendChild(hint);
     }
 
-    // background hearts
-    function spawnHearts(){
-      const root = document.getElementById("hearts");
-      root.innerHTML = "";
-      const count = 24;
-      for (let i=0; i<count; i++){
-        const h = document.createElement("div");
-        h.className = "heart";
-        h.style.left = Math.random()*100 + "vw";
-        h.style.bottom = (-10 - Math.random()*60) + "vh";
-        const dur = 7 + Math.random()*9;
-        h.style.animationDuration = dur + "s";
-        h.style.animationDelay = (-Math.random()*dur) + "s";
-        const s = 0.6 + Math.random()*1.3;
-        h.style.transform = `scale(${s}) rotate(45deg)`;
-        root.appendChild(h);
-      }
-    }
-
     restartBtn.addEventListener("click", restart);
-
-    spawnHearts();
     render();
-    window.addEventListener("resize", spawnHearts);
   </script>
 </body>
 </html>
